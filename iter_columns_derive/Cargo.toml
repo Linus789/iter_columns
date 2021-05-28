@@ -1,6 +1,6 @@
 [package]
 name = "iter_columns_derive"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 authors = ["Linus789"]
 description = "The derive crate for iter_columns"

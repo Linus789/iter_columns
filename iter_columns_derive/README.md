@@ -1,2 +1,2 @@
-# iter\_column\_derive
-Procedural macros for `iter_column`
+# iter\_columns\_derive
+Procedural macros for `iter_columns`

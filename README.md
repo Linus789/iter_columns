@@ -6,7 +6,7 @@ Array support is only available for Rust >=1.51.0,
 so you may need to use the `no_array` feature to compile this crate
 for older versions of Rust.
 
-```
+```toml
 [dependencies]
 iter_columns = { version = "0.2.0", features = ["no_array"] }
 ```

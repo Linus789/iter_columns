@@ -1,0 +1,16 @@
+[package]
+name = "iter_columns_derive"
+version = "0.1.0"
+edition = "2018"
+authors = ["Linus789"]
+description = "The derive crate for iter_columns"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/Linus789/iter_columns"
+
+[dependencies]
+syn = { version = "1.0.72", features = ["full"] }
+quote = "1.0.9"
+
+[lib]
+proc-macro = true

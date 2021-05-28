@@ -8,7 +8,7 @@ for older versions of Rust.
 
 ```toml
 [dependencies]
-iter_columns = { version = "0.2.0", features = ["no_array"] }
+iter_columns = { version = "0.2.1", features = ["no_array"] }
 ```
 
 ## Examples

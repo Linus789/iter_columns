@@ -10,7 +10,7 @@ repository = "https://github.com/Linus789/iter_columns"
 categories = ["algorithms", "rust-patterns"]
 
 [dependencies]
-iter_columns_derive = "0.1.1"
+iter_columns_derive = { version = "0.1.1", path = "../iter_columns_derive" }
 
 [features]
 no_array = []

@@ -24,7 +24,7 @@ jobs:
       - name: Test
         run: cd iter_columns && cargo test
   test-noarray:
-    name: Test (no_array)
+    name: Test no_array
     strategy:
       fail-fast: false
       matrix:

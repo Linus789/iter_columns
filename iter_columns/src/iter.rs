@@ -1,4 +1,5 @@
 use iter_columns_derive::IterColumns;
+#[cfg(not(feature = "no_array"))]
 use iter_columns_derive::IterColumnsArray;
 
 // into_iter().columns() for Vecs
@@ -91,12 +92,14 @@ impl<T: Default> Iterator for ColumnsOptionsIntoIterVec<T> {
 }
 
 // into_iter().columns() for arrays
+#[cfg(not(feature = "no_array"))]
 pub struct ColumnsIntoIterArray<T, const N: usize> {
     arr: Vec<[T; N]>,
     len: usize,
     index: usize,
 }
 
+#[cfg(not(feature = "no_array"))]
 impl<T: Default, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
     type Item = Vec<T>;
 
@@ -122,6 +125,8 @@ impl<T: Default, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
         Some(column)
     }
 }
+
+#[cfg(not(feature = "no_array"))]
 pub trait ColExtIntoIterArray<T, const N: usize>: Iterator<Item = [T; N]> {
     fn columns(self) -> ColumnsIntoIterArray<T, N>
     where
@@ -134,6 +139,7 @@ pub trait ColExtIntoIterArray<T, const N: usize>: Iterator<Item = [T; N]> {
     }
 }
 
+#[cfg(not(feature = "no_array"))]
 impl<T, I: Iterator<Item = [T; N]>, const N: usize> ColExtIntoIterArray<T, N> for I {}
 
 #[allow(dead_code)]
@@ -217,41 +223,51 @@ struct IterColumnsSliceBorrowed9<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a &'a [T])
 struct IterColumnsSliceBorrowed10<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a &'a &'a [T]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed1<'a, T, const N: usize>(&'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed2<'a, T, const N: usize>(&'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed3<'a, T, const N: usize>(&'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed4<'a, T, const N: usize>(&'a &'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed5<'a, T, const N: usize>(&'a &'a &'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed6<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed7<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed8<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed9<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a &'a &'a [T; N]);
 
 #[allow(dead_code)]
+#[cfg(not(feature = "no_array"))]
 #[derive(IterColumnsArray)]
 struct IterColumnsArrayBorrowed10<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a &'a &'a &'a [T; N]);

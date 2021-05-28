@@ -24,6 +24,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     #[allow(array_into_iter)]
     fn test_into_array() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
@@ -35,6 +36,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_1() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         assert_eq!(test_data.iter().columns().collect::<Vec<_>>(), [[&1, &4], [&2, &5], [
@@ -43,6 +45,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_2() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -54,6 +57,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_3() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -66,6 +70,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_4() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -79,6 +84,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_5() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -93,6 +99,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_6() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -108,6 +115,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_7() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -124,6 +132,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_8() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -141,6 +150,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_9() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];
@@ -159,6 +169,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "no_array"))]
     fn test_array_borrowed_10() {
         let test_data = [[1, 2, 3], [4, 5, 6]];
         let borrowed_data = vec![&test_data[0], &test_data[1]];

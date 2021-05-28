@@ -1,6 +1,6 @@
 [package]
 name = "iter_columns"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 authors = ["Linus789"]
 description = "Iterate over columns easily"
@@ -11,3 +11,6 @@ categories = ["algorithms", "rust-patterns"]
 
 [dependencies]
 iter_columns_derive = "0.1.0"
+
+[features]
+no_array = []

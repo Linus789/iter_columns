@@ -1,15 +1,16 @@
+use std::collections::HashMap;
 use iter_columns_derive::IterColumns;
 #[cfg(not(feature = "no_array"))]
 use iter_columns_derive::IterColumnsArray;
 
 // into_iter().columns() for Vecs
 pub struct ColumnsIntoIterVec<T> {
-    arr: Vec<Vec<T>>,
+    arr: Vec<HashMap<usize, T>>,
     len: usize,
     index: usize,
 }
 
-impl<T: Default> Iterator for ColumnsIntoIterVec<T> {
+impl<T> Iterator for ColumnsIntoIterVec<T> {
     type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -22,8 +23,8 @@ impl<T: Default> Iterator for ColumnsIntoIterVec<T> {
             .arr
             .iter_mut()
             .filter_map(move |row| {
-                if row.get(index).is_some() {
-                    Some(std::mem::take(&mut row[index]))
+                if let Some(cell) = row.remove(&index) {
+                    Some(cell)
                 } else {
                     None
                 }
@@ -40,7 +41,7 @@ pub trait ColExtIntoIterVec<T>: Iterator<Item = Vec<T>> {
     where
         Self: Sized,
     {
-        let arr: Vec<Vec<T>> = self.collect();
+        let arr: Vec<HashMap<usize, T>> = self.map(|x| x.into_iter().enumerate().collect()).collect();
         let len = arr.iter().map(|row| row.len()).max().unwrap_or(0);
 
         ColumnsIntoIterVec { arr, len, index: 0 }
@@ -50,7 +51,7 @@ pub trait ColExtIntoIterVec<T>: Iterator<Item = Vec<T>> {
     where
         Self: Sized,
     {
-        let arr: Vec<Vec<T>> = self.collect();
+        let arr: Vec<HashMap<usize, T>> = self.map(|x| x.into_iter().enumerate().collect()).collect();
         let len = arr.iter().map(|row| row.len()).max().unwrap_or(0);
 
         ColumnsOptionsIntoIterVec { arr, len, index: 0 }
@@ -60,12 +61,12 @@ pub trait ColExtIntoIterVec<T>: Iterator<Item = Vec<T>> {
 impl<T, I: Iterator<Item = Vec<T>>> ColExtIntoIterVec<T> for I {}
 
 pub struct ColumnsOptionsIntoIterVec<T> {
-    arr: Vec<Vec<T>>,
+    arr: Vec<HashMap<usize, T>>,
     len: usize,
     index: usize,
 }
 
-impl<T: Default> Iterator for ColumnsOptionsIntoIterVec<T> {
+impl<T> Iterator for ColumnsOptionsIntoIterVec<T> {
     type Item = Vec<Option<T>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -78,8 +79,8 @@ impl<T: Default> Iterator for ColumnsOptionsIntoIterVec<T> {
             .arr
             .iter_mut()
             .map(move |row| {
-                if row.get(index).is_some() {
-                    Some(std::mem::take(&mut row[index]))
+                if let Some(cell) = row.remove(&index) {
+                    Some(cell)
                 } else {
                     None
                 }
@@ -94,13 +95,13 @@ impl<T: Default> Iterator for ColumnsOptionsIntoIterVec<T> {
 // into_iter().columns() for arrays
 #[cfg(not(feature = "no_array"))]
 pub struct ColumnsIntoIterArray<T, const N: usize> {
-    arr: Vec<[T; N]>,
+    arr: Vec<HashMap<usize, T>>,
     len: usize,
     index: usize,
 }
 
 #[cfg(not(feature = "no_array"))]
-impl<T: Default, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
+impl<T, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
     type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -113,8 +114,8 @@ impl<T: Default, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
             .arr
             .iter_mut()
             .filter_map(move |row| {
-                if row.as_ref().get(index).is_some() {
-                    Some(std::mem::take(&mut row[index]))
+                if let Some(cell) = row.remove(&index) {
+                    Some(cell)
                 } else {
                     None
                 }
@@ -132,7 +133,7 @@ pub trait ColExtIntoIterArray<T, const N: usize>: Iterator<Item = [T; N]> {
     where
         Self: Sized,
     {
-        let arr: Vec<[T; N]> = self.collect();
+        let arr: Vec<HashMap<usize, T>> = self.map(|x| std::array::IntoIter::new(x).enumerate().collect()).collect();
         let len = N;
 
         ColumnsIntoIterArray { arr, len, index: 0 }

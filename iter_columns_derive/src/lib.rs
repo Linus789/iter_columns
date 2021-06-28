@@ -16,8 +16,8 @@ pub fn iter_columns_derive(input: TokenStream) -> TokenStream {
 fn impl_iter_columns_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let name_struct = quote::format_ident!("{}Struct", name);
-    let name_ext = quote::format_ident!("{}Ext", name);
     let name_options_struct = quote::format_ident!("{}OptionsStruct", name);
+    let name_ext = quote::format_ident!("{}Ext", name);
 
     let field_ty = match &ast.data {
         syn::Data::Struct(s) => match &s.fields {

@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Test
-        run: cd iter_columns && cargo test
+        run: cargo test --features array_into_iter
   test-noarray:
     name: Test no_array
     strategy:
@@ -44,7 +44,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Test
-        run: cd iter_columns && cargo test --features "no_array"
+        run: cargo test
   lint:
     name: Linting (fmt + clippy)
     runs-on: ubuntu-latest
@@ -59,6 +59,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Clippy
-        run: cd iter_columns && cargo clippy -- -D warnings && cd ../iter_columns_derive && cargo clippy -- -D warnings
+        run: cargo clippy -- -D warnings
       - name: Format check
-        run: cd iter_columns && cargo fmt -- --check && cd ../iter_columns_derive && cargo fmt -- --check
+        run: cargo fmt -- --check

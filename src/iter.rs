@@ -92,6 +92,26 @@ impl<T> ExactSizeIterator for ColumnsOptionsIntoIterVec<T> {}
 impl<T> FusedIterator for ColumnsOptionsIntoIterVec<T> {}
 
 pub trait ColumnsIntoIterVecTrait<T>: Iterator<Item = Vec<T>> {
+    /// Iterate over the columns.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let v = vec![
+    ///     vec![1, 2, 3],
+    ///     vec![4, 5, 6],
+    /// ];
+    /// let mut col_iter = v.into_iter().columns();
+    ///
+    /// assert_eq!(Some(vec![1, 4]), col_iter.next());
+    /// assert_eq!(Some(vec![2, 5]), col_iter.next());
+    /// assert_eq!(Some(vec![3, 6]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns(self) -> ColumnsIntoIterVec<T>
     where
         Self: Sized,
@@ -102,6 +122,28 @@ pub trait ColumnsIntoIterVecTrait<T>: Iterator<Item = Vec<T>> {
         ColumnsIntoIterVec { arr, len, index: 0 }
     }
 
+    /// Iterate over the columns with the cells wrapped in [`Option`]s.
+    ///
+    /// Might be useful, if you have an inconsistent column length.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let v = vec![
+    ///     vec![1, 2],
+    ///     vec![4, 5, 6],
+    /// ];
+    /// let mut col_iter = v.into_iter().columns_options();
+    ///
+    /// assert_eq!(Some(vec![Some(1), Some(4)]), col_iter.next());
+    /// assert_eq!(Some(vec![Some(2), Some(5)]), col_iter.next());
+    /// assert_eq!(Some(vec![None, Some(6)]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns_options(self) -> ColumnsOptionsIntoIterVec<T>
     where
         Self: Sized,
@@ -187,6 +229,26 @@ impl<T, const N: usize> FusedIterator for ColumnsIntoIterArray<T, N> {}
 
 #[cfg(feature = "array_into_iter")]
 pub trait ColumnsIntoIterArrayTrait<T, const N: usize>: Iterator<Item = [T; N]> {
+    /// Iterate over the columns.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let a = [
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    /// ];
+    /// let mut col_iter = std::array::IntoIter::new(a).columns();
+    ///
+    /// assert_eq!(Some(vec![1, 4]), col_iter.next());
+    /// assert_eq!(Some(vec![2, 5]), col_iter.next());
+    /// assert_eq!(Some(vec![3, 6]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns(self) -> ColumnsIntoIterArray<T, N>
     where
         Self: Sized,
@@ -310,6 +372,26 @@ impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> ExactSizeIterator for ColumnsOp
 impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> FusedIterator for ColumnsOptions<'a, T, C> {}
 
 pub trait ColumnsTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<Item = &'a C> {
+    /// Iterate over the columns.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let v = vec![
+    ///     vec![1, 2, 3],
+    ///     vec![4, 5, 6],
+    /// ];
+    /// let mut col_iter = v.iter().columns();
+    ///
+    /// assert_eq!(Some(vec![&1, &4]), col_iter.next());
+    /// assert_eq!(Some(vec![&2, &5]), col_iter.next());
+    /// assert_eq!(Some(vec![&3, &6]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns(self) -> Columns<'a, T, C>
     where
         Self: Sized,
@@ -325,6 +407,28 @@ pub trait ColumnsTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<Ite
         }
     }
 
+    /// Iterate over the columns with the cells wrapped in [`Option`]s.
+    ///
+    /// Might be useful, if you have an inconsistent column length.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let v = vec![
+    ///     vec![1, 2],
+    ///     vec![4, 5, 6],
+    /// ];
+    /// let mut col_iter = v.iter().columns_options();
+    ///
+    /// assert_eq!(Some(vec![Some(&1), Some(&4)]), col_iter.next());
+    /// assert_eq!(Some(vec![Some(&2), Some(&5)]), col_iter.next());
+    /// assert_eq!(Some(vec![None, Some(&6)]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns_options(self) -> ColumnsOptions<'a, T, C>
     where
         Self: Sized,
@@ -344,6 +448,26 @@ pub trait ColumnsTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<Ite
 impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a, I: Iterator<Item = &'a C>> ColumnsTrait<'a, T, C> for I {}
 
 pub trait ColumnsMutTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<Item = &'a mut C> {
+    /// Iterate over the columns.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let mut v = vec![
+    ///     vec![1, 2, 3],
+    ///     vec![4, 5, 6],
+    /// ];
+    /// let mut col_iter = v.iter_mut().columns();
+    ///
+    /// assert_eq!(Some(vec![&1, &4]), col_iter.next());
+    /// assert_eq!(Some(vec![&2, &5]), col_iter.next());
+    /// assert_eq!(Some(vec![&3, &6]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns(self) -> Columns<'a, T, C>
     where
         Self: Sized,
@@ -359,6 +483,28 @@ pub trait ColumnsMutTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<
         }
     }
 
+    /// Iterate over the columns with the cells wrapped in [`Option`]s.
+    ///
+    /// Might be useful, if you have an inconsistent column length.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use iter_columns::prelude::*;
+    ///
+    /// let mut v = vec![
+    ///     vec![1, 2],
+    ///     vec![4, 5, 6],
+    /// ];
+    /// let mut col_iter = v.iter_mut().columns_options();
+    ///
+    /// assert_eq!(Some(vec![Some(&1), Some(&4)]), col_iter.next());
+    /// assert_eq!(Some(vec![Some(&2), Some(&5)]), col_iter.next());
+    /// assert_eq!(Some(vec![None, Some(&6)]), col_iter.next());
+    /// assert_eq!(None, col_iter.next());
+    /// ```
     fn columns_options(self) -> ColumnsOptions<'a, T, C>
     where
         Self: Sized,

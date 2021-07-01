@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use iter_columns_derive::IterColumns;
-#[cfg(not(feature = "no_array"))]
-use iter_columns_derive::IterColumnsArray;
+use std::iter::FusedIterator;
+use std::marker::PhantomData;
 
 // into_iter().columns() for Vecs
 pub struct ColumnsIntoIterVec<T> {
@@ -19,24 +18,80 @@ impl<T> Iterator for ColumnsIntoIterVec<T> {
         }
 
         let index = self.index;
-        let column = self
-            .arr
-            .iter_mut()
-            .filter_map(move |row| {
-                if let Some(cell) = row.remove(&index) {
-                    Some(cell)
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let column = self.arr.iter_mut().filter_map(move |row| row.remove(&index)).collect();
 
         self.index += 1;
         Some(column)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.len - self.index;
+        (remaining_len, Some(remaining_len))
+    }
 }
 
-pub trait ColExtIntoIterVec<T>: Iterator<Item = Vec<T>> {
+impl<T> DoubleEndedIterator for ColumnsIntoIterVec<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
+
+        let index = self.len - 1;
+        let column = self.arr.iter_mut().filter_map(move |row| row.remove(&index)).collect();
+
+        self.len -= 1;
+        Some(column)
+    }
+}
+
+impl<T> ExactSizeIterator for ColumnsIntoIterVec<T> {}
+impl<T> FusedIterator for ColumnsIntoIterVec<T> {}
+
+pub struct ColumnsOptionsIntoIterVec<T> {
+    arr: Vec<HashMap<usize, T>>,
+    len: usize,
+    index: usize,
+}
+
+impl<T> Iterator for ColumnsOptionsIntoIterVec<T> {
+    type Item = Vec<Option<T>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
+
+        let index = self.index;
+        let column = self.arr.iter_mut().map(move |row| row.remove(&index)).collect();
+
+        self.index += 1;
+        Some(column)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.len - self.index;
+        (remaining_len, Some(remaining_len))
+    }
+}
+
+impl<T> DoubleEndedIterator for ColumnsOptionsIntoIterVec<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
+
+        let index = self.len - 1;
+        let column = self.arr.iter_mut().map(move |row| row.remove(&index)).collect();
+
+        self.len -= 1;
+        Some(column)
+    }
+}
+
+impl<T> ExactSizeIterator for ColumnsOptionsIntoIterVec<T> {}
+impl<T> FusedIterator for ColumnsOptionsIntoIterVec<T> {}
+
+pub trait ColumnsIntoIterVecTrait<T>: Iterator<Item = Vec<T>> {
     fn columns(self) -> ColumnsIntoIterVec<T>
     where
         Self: Sized,
@@ -58,49 +113,17 @@ pub trait ColExtIntoIterVec<T>: Iterator<Item = Vec<T>> {
     }
 }
 
-impl<T, I: Iterator<Item = Vec<T>>> ColExtIntoIterVec<T> for I {}
-
-pub struct ColumnsOptionsIntoIterVec<T> {
-    arr: Vec<HashMap<usize, T>>,
-    len: usize,
-    index: usize,
-}
-
-impl<T> Iterator for ColumnsOptionsIntoIterVec<T> {
-    type Item = Vec<Option<T>>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.len {
-            return None;
-        }
-
-        let index = self.index;
-        let column = self
-            .arr
-            .iter_mut()
-            .map(move |row| {
-                if let Some(cell) = row.remove(&index) {
-                    Some(cell)
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        self.index += 1;
-        Some(column)
-    }
-}
+impl<T, I: Iterator<Item = Vec<T>>> ColumnsIntoIterVecTrait<T> for I {}
 
 // into_iter().columns() for arrays
-#[cfg(not(feature = "no_array"))]
+#[cfg(feature = "array_into_iter")]
 pub struct ColumnsIntoIterArray<T, const N: usize> {
     arr: Vec<HashMap<usize, T>>,
     len: usize,
     index: usize,
 }
 
-#[cfg(not(feature = "no_array"))]
+#[cfg(feature = "array_into_iter")]
 impl<T, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
     type Item = Vec<T>;
 
@@ -125,150 +148,231 @@ impl<T, const N: usize> Iterator for ColumnsIntoIterArray<T, N> {
         self.index += 1;
         Some(column)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.len - self.index;
+        (remaining_len, Some(remaining_len))
+    }
 }
 
-#[cfg(not(feature = "no_array"))]
-pub trait ColExtIntoIterArray<T, const N: usize>: Iterator<Item = [T; N]> {
+#[cfg(feature = "array_into_iter")]
+impl<T, const N: usize> DoubleEndedIterator for ColumnsIntoIterArray<T, N> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
+
+        let index = self.len - 1;
+        let column = self
+            .arr
+            .iter_mut()
+            .filter_map(move |row| {
+                if let Some(cell) = row.remove(&index) {
+                    Some(cell)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        self.len -= 1;
+        Some(column)
+    }
+}
+
+#[cfg(feature = "array_into_iter")]
+impl<T, const N: usize> ExactSizeIterator for ColumnsIntoIterArray<T, N> {}
+#[cfg(feature = "array_into_iter")]
+impl<T, const N: usize> FusedIterator for ColumnsIntoIterArray<T, N> {}
+
+#[cfg(feature = "array_into_iter")]
+pub trait ColumnsIntoIterArrayTrait<T, const N: usize>: Iterator<Item = [T; N]> {
     fn columns(self) -> ColumnsIntoIterArray<T, N>
     where
         Self: Sized,
     {
-        let arr: Vec<HashMap<usize, T>> = self.map(|x| std::array::IntoIter::new(x).enumerate().collect()).collect();
+        let arr: Vec<HashMap<usize, T>> = self
+            .map(|x| std::array::IntoIter::new(x).enumerate().collect())
+            .collect();
         let len = N;
 
         ColumnsIntoIterArray { arr, len, index: 0 }
     }
 }
 
-#[cfg(not(feature = "no_array"))]
-impl<T, I: Iterator<Item = [T; N]>, const N: usize> ColExtIntoIterArray<T, N> for I {}
+#[cfg(feature = "array_into_iter")]
+impl<T, I: Iterator<Item = [T; N]>, const N: usize> ColumnsIntoIterArrayTrait<T, N> for I {}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed1<'a, T>(&'a Vec<T>);
+// Borrowed Vecs, slices, arrays
+pub trait SliceHelper<T> {
+    fn helper_get(&self, index: usize) -> Option<&T>;
+    fn helper_len(&self) -> usize;
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed2<'a, T>(&'a &'a Vec<T>);
+impl<T, C: AsRef<[T]> + ?Sized> SliceHelper<T> for C {
+    fn helper_get(&self, index: usize) -> Option<&T> {
+        self.as_ref().get(index)
+    }
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed3<'a, T>(&'a &'a &'a Vec<T>);
+    fn helper_len(&self) -> usize {
+        self.as_ref().len()
+    }
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed4<'a, T>(&'a &'a &'a &'a Vec<T>);
+pub struct Columns<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> {
+    arr: Vec<&'a C>,
+    len: usize,
+    index: usize,
+    _phantom: PhantomData<T>,
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed5<'a, T>(&'a &'a &'a &'a &'a Vec<T>);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> Iterator for Columns<'a, T, C> {
+    type Item = Vec<&'a T>;
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed6<'a, T>(&'a &'a &'a &'a &'a &'a Vec<T>);
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed7<'a, T>(&'a &'a &'a &'a &'a &'a &'a Vec<T>);
+        let index = self.index;
+        let column = self.arr.iter().filter_map(move |row| row.helper_get(index)).collect();
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed8<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a Vec<T>);
+        self.index += 1;
+        Some(column)
+    }
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed9<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a &'a Vec<T>);
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.len - self.index;
+        (remaining_len, Some(remaining_len))
+    }
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsVecBorrowed10<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a &'a &'a Vec<T>);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> DoubleEndedIterator for Columns<'a, T, C> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed1<'a, T>(&'a [T]);
+        let index = self.len - 1;
+        let column = self.arr.iter().filter_map(move |row| row.helper_get(index)).collect();
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed2<'a, T>(&'a &'a [T]);
+        self.len -= 1;
+        Some(column)
+    }
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed3<'a, T>(&'a &'a &'a [T]);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> ExactSizeIterator for Columns<'a, T, C> {}
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> FusedIterator for Columns<'a, T, C> {}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed4<'a, T>(&'a &'a &'a &'a [T]);
+pub struct ColumnsOptions<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> {
+    arr: Vec<&'a C>,
+    len: usize,
+    index: usize,
+    _phantom: PhantomData<T>,
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed5<'a, T>(&'a &'a &'a &'a &'a [T]);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> Iterator for ColumnsOptions<'a, T, C> {
+    type Item = Vec<Option<&'a T>>;
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed6<'a, T>(&'a &'a &'a &'a &'a &'a [T]);
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed7<'a, T>(&'a &'a &'a &'a &'a &'a &'a [T]);
+        let index = self.index;
+        let column = self.arr.iter().map(move |row| row.helper_get(index)).collect();
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed8<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a [T]);
+        self.index += 1;
+        Some(column)
+    }
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed9<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a &'a [T]);
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.len - self.index;
+        (remaining_len, Some(remaining_len))
+    }
+}
 
-#[allow(dead_code)]
-#[derive(IterColumns)]
-struct IterColumnsSliceBorrowed10<'a, T>(&'a &'a &'a &'a &'a &'a &'a &'a &'a &'a [T]);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> DoubleEndedIterator for ColumnsOptions<'a, T, C> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index == self.len {
+            return None;
+        }
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed1<'a, T, const N: usize>(&'a [T; N]);
+        let index = self.len - 1;
+        let column = self.arr.iter().map(move |row| row.helper_get(index)).collect();
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed2<'a, T, const N: usize>(&'a &'a [T; N]);
+        self.len -= 1;
+        Some(column)
+    }
+}
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed3<'a, T, const N: usize>(&'a &'a &'a [T; N]);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> ExactSizeIterator for ColumnsOptions<'a, T, C> {}
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a> FusedIterator for ColumnsOptions<'a, T, C> {}
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed4<'a, T, const N: usize>(&'a &'a &'a &'a [T; N]);
+pub trait ColumnsTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<Item = &'a C> {
+    fn columns(self) -> Columns<'a, T, C>
+    where
+        Self: Sized,
+    {
+        let arr: Vec<_> = self.collect();
+        let len = arr.iter().map(|row| row.helper_len()).max().unwrap_or(0);
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed5<'a, T, const N: usize>(&'a &'a &'a &'a &'a [T; N]);
+        Columns {
+            arr,
+            len,
+            index: 0,
+            _phantom: PhantomData,
+        }
+    }
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed6<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a [T; N]);
+    fn columns_options(self) -> ColumnsOptions<'a, T, C>
+    where
+        Self: Sized,
+    {
+        let arr: Vec<_> = self.collect();
+        let len = arr.iter().map(|row| row.helper_len()).max().unwrap_or(0);
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed7<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a [T; N]);
+        ColumnsOptions {
+            arr,
+            len,
+            index: 0,
+            _phantom: PhantomData,
+        }
+    }
+}
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed8<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a &'a [T; N]);
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a, I: Iterator<Item = &'a C>> ColumnsTrait<'a, T, C> for I {}
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed9<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a &'a &'a [T; N]);
+pub trait ColumnsMutTrait<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a>: Iterator<Item = &'a mut C> {
+    fn columns(self) -> Columns<'a, T, C>
+    where
+        Self: Sized,
+    {
+        let arr: Vec<_> = self.map(|x| &*x).collect();
+        let len = arr.iter().map(|row| row.helper_len()).max().unwrap_or(0);
 
-#[allow(dead_code)]
-#[cfg(not(feature = "no_array"))]
-#[derive(IterColumnsArray)]
-struct IterColumnsArrayBorrowed10<'a, T, const N: usize>(&'a &'a &'a &'a &'a &'a &'a &'a &'a &'a [T; N]);
+        Columns {
+            arr,
+            len,
+            index: 0,
+            _phantom: PhantomData,
+        }
+    }
+
+    fn columns_options(self) -> ColumnsOptions<'a, T, C>
+    where
+        Self: Sized,
+    {
+        let arr: Vec<_> = self.map(|x| &*x).collect();
+        let len = arr.iter().map(|row| row.helper_len()).max().unwrap_or(0);
+
+        ColumnsOptions {
+            arr,
+            len,
+            index: 0,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a, T: 'a, C: SliceHelper<T> + ?Sized + 'a, I: Iterator<Item = &'a mut C>> ColumnsMutTrait<'a, T, C> for I {}

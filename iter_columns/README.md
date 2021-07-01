@@ -2,13 +2,13 @@
 Iterate over columns easily.
 Works with Vecs, Slices and Arrays.
 
-Array support is only available for Rust >=1.51.0,
-so you may need to use the `no_array` feature to compile this crate
-for older versions of Rust.
+The support for `std::array::IntoIter` is disabled by default
+and is only available for Rust versions since (>=) 1.51.0.
+To enable the support, use the `array_into_iter` feature.
 
 ```toml
 [dependencies]
-iter_columns = { version = "0.2.1", features = ["no_array"] }
+iter_columns = { version = "0.3.0", features = ["array_into_iter"] }
 ```
 
 ## Examples
@@ -40,7 +40,7 @@ fn main() {
         vec![4, 5, 6], // 3 columns
     ];
     
-    // you can also use iter() instead of into_iter()
+    // you can also use iter() or iter_mut() instead of into_iter()
     assert_eq!(test_data.iter().columns().collect::<Vec<_>>(), [
         vec![&1, &4],
         vec![&2, &5],

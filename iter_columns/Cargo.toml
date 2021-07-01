@@ -1,16 +1,13 @@
 [package]
 name = "iter_columns"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2018"
 authors = ["Linus789"]
 description = "Iterate over columns easily"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Linus789/iter_columns"
 categories = ["algorithms", "rust-patterns"]
 
-[dependencies]
-iter_columns_derive = { version = "0.1.1", path = "../iter_columns_derive" }
-
 [features]
-no_array = []
+array_into_iter = []
